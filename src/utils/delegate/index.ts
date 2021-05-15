@@ -4,6 +4,25 @@
 import closest from './closest'
 
 /**
+ * Finds closest match and invokes callback.
+ *
+ * @param {Element} element
+ * @param {String} selector
+ * @param {String} type
+ * @param {Function} callback
+ * @return {Function}
+ */
+function listener(element, selector, type, callback) {
+  return function(e) {
+    e.delegateTarget = closest(e.target, selector)
+
+    if (e.delegateTarget) {
+      callback.call(element, e)
+    }
+  }
+}
+
+/**
  * Delegates event to a selector.
  *
  * @param {Element} element
@@ -35,7 +54,7 @@ function _delegate(element, selector, type, callback, useCapture) {
  * @param {Boolean} useCapture
  * @return {Object}
  */
-function delegate(elements, selector, type, callback, useCapture = false) {
+export function delegate(elements, selector, type, callback, useCapture = false) {
   // Handle the regular Element usage
   if (typeof elements.addEventListener === 'function') {
     return _delegate.apply(null, arguments)
@@ -58,24 +77,3 @@ function delegate(elements, selector, type, callback, useCapture = false) {
     return _delegate(element, selector, type, callback, useCapture)
   })
 }
-
-/**
- * Finds closest match and invokes callback.
- *
- * @param {Element} element
- * @param {String} selector
- * @param {String} type
- * @param {Function} callback
- * @return {Function}
- */
-function listener(element, selector, type, callback) {
-  return function(e) {
-    e.delegateTarget = closest(e.target, selector)
-
-    if (e.delegateTarget) {
-      callback.call(element, e)
-    }
-  }
-}
-
-export default delegate

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>dom-attr-tracker 案例</title>
+    <style>
+      body {
+        padding: 30px;
+      }
+      input,
+      button {
+        padding: 5px 15px;
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <button data-tea-click="eventNameClick" data-tea-name="zhongxia">
+      data-tea-click 点击触发埋点
+    </button>
+    <button data-tea="eventNameClick" data-tea-age="18">
+      data-tea 点击 + 获取焦点 + 失去焦点
+    </button>
+
+    <button data-tea-hover="eventNameClick" data-tea-age="hover">
+      data-tea-hover hover埋点
+    </button>
+
+    <div>
+      <label for="">监听获取焦点：</label>
+      <input type="text" data-tea-focus="eventNameFocus" data-tea-name="focus13" />
+    </div>
+
+    <div>
+      <label for="">监听失去焦点：</label>
+      <input type="text" data-tea-blur="eventNameBlur" data-tea-name="blur123123" />
+    </div>
+
+    <script src="../dist/dom-attr-tracker.umd.js"></script>
+    <script>
+      window.onload = function() {
+        window.obj = new window.domAttrTracker({
+          callback: (eventName, eventParam, type) => {
+            console.log('[data-t]', eventName, eventParam, type)
+          }
+        })
+      }
+    </script>
+  </body>
+</html>
