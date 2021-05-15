@@ -7,7 +7,7 @@ import json from 'rollup-plugin-json'
 
 const pkg = require('./package.json')
 
-const libraryName = 'attr-tracker'
+const libraryName = 'dom-attr-tracker'
 
 export default {
   input: `src/${libraryName}.ts`,
