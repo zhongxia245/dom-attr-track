@@ -77,3 +77,22 @@ export function delegate(elements, selector, type, callback, useCapture = false)
     return _delegate(element, selector, type, callback, useCapture)
   })
 }
+
+/**
+ * 元素是否显示再可视窗口中
+ * @param {Element} el 元素
+ * @param {boolean} partiallyVisible 部分展示
+ */
+export function elementIsVisibleInViewport(el: Element, partiallyVisible = false) {
+  const { top, left, bottom, right } = el.getBoundingClientRect()
+  // 部分展示就返回true
+  if (partiallyVisible) {
+    return (
+      ((top >= 0 && top <= innerHeight) || (bottom >= 0 && bottom <= innerHeight)) &&
+      ((left >= 0 && left <= innerWidth) || (right >= 0 && right <= innerWidth))
+    )
+  } else {
+    // 全部在屏幕内，才算true
+    return top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth
+  }
+}

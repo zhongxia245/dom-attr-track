@@ -1,7 +1,7 @@
 // Import here Polyfills if needed. Recommended core-js (npm i -D core-js)
 // import "core-js/fn/array.find"
 // ...
-import { debounce, delegate } from './utils'
+import { debounce, delegate, elementIsVisibleInViewport } from './utils'
 
 const DEFAULT_CONFIG = {
   /** 监听的父元素选择器， 默认 body */
@@ -41,9 +41,14 @@ export default class DomAttrTracker {
     type: string
   ) => void
 
+  private io: any
+  private observeList: any[]
+
   constructor(config: Config) {
     this.config = { ...DEFAULT_CONFIG, ...config }
     this.listenerList = []
+    this.io = null // intersectionObserver 实例
+    this.observeList = [] // intersectionObserver 观察元素列表
 
     this.debounceCallback = debounce(this.config.callback, this.config.debounceWaitTime)
 
@@ -51,8 +56,8 @@ export default class DomAttrTracker {
   }
 
   private init() {
-    this.initDomListener()
-    this.initExposeListener()
+    this.initEvent()
+    this.initExpose()
   }
 
   /**
@@ -80,7 +85,7 @@ export default class DomAttrTracker {
   /**
    * 初始化DOM事件监听
    */
-  private initDomListener() {
+  private initEvent() {
     const { selector, prefixDomAttrName } = this.config || {}
 
     // 不设置则默认对body进行事件委托
@@ -139,8 +144,64 @@ export default class DomAttrTracker {
   /**
    * 初始化模块曝光监听
    */
-  private initExposeListener() {
-    console.log('initExposeListener')
+  initExpose() {
+    const { exposePercent, exposeTime, refreshObserverTime } = this.config
+
+    if (!exposePercent) return
+
+    // 规则：曝光超过50%的内容，且2s后内容还在页面可视窗口
+    this.io = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (!exposePercent) return
+
+          const $module = entry.target as HTMLElement
+          if (entry.intersectionRatio >= exposePercent) {
+            // @ts-ignore
+            if ($module.timerId) clearTimeout($module.timerId)
+            // @ts-ignore
+            $module.timerId = setTimeout(() => {
+              if ($module) {
+                // 部分展示，则认为展示
+                const isShow = elementIsVisibleInViewport($module, true)
+                if (isShow) {
+                  const params = this.getParams($module, 'expose')
+                  this.debounceCallback(params.eventName, params.eventParams, 'expose')
+                }
+              }
+            }, exposeTime)
+          }
+        })
+      },
+      {
+        threshold: [0, exposePercent] // 触发回调的时间间隔
+      }
+    )
+
+    this.refreshObserver()
+
+    // 每隔一段重新监听元素是否变动
+    setInterval(() => {
+      this.refreshObserver()
+    }, refreshObserverTime)
+  }
+
+  // 更新观察的元素
+  refreshObserver() {
+    const { prefixDomAttrName } = this.config
+    const modules = Array.from(document.querySelectorAll(`[${prefixDomAttrName}-expose]`))
+    // 移出老元素的监听，再新增新元素的监听
+    this.observeList.forEach(item => {
+      if (modules.indexOf(item) === -1) {
+        this.io && this.io.unobserve(item)
+      }
+    })
+    modules.forEach((item: Element) => {
+      if (this.observeList.indexOf(item) === -1) {
+        this.io && this.io.observe(item)
+      }
+    })
+    this.observeList = modules
   }
 
   /**
